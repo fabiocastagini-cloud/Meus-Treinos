@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Meus Treinos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ===== INDEX ===== */
+  .index-wrap { padding: 24px 16px 40px; }
+  .index-wrap h1 { text-align: center; font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .subtitle { text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 24px; }
+  .grid { display: flex; flex-direction: column; gap: 12px; max-width: 420px; margin: 0 auto; }
+  .card {
+    display: flex; align-items: center; gap: 14px;
+    background: #1a1a1a; border-radius: 14px; padding: 16px 18px;
+    border: 1px solid #2a2a2a; cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:active { transform: scale(0.97); border-color: #444; }
+  .card-icon {
+    font-size: 1.6rem; width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .card-text { flex: 1; }
+  .card-day { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-name { font-size: 1rem; font-weight: 600; color: #fff; margin-top: 2px; }
+  .card-focus { font-size: 0.8rem; color: #888; margin-top: 2px; }
+  .card-arrow { color: #555; font-size: 1.2rem; }
+
+  .c-push .card-icon { background: #2d1f0f; } .c-push .card-day { color: #f5a623; }
+  .c-run .card-icon { background: #0f2d1f; } .c-run .card-day { color: #4cd964; }
+  .c-leg .card-icon { background: #1a0f2d; } .c-leg .card-day { color: #a78bfa; }
+  .c-pull .card-icon { background: #0f1a2d; } .c-pull .card-day { color: #5b9bf5; }
+  .c-shoulder .card-icon { background: #2d0f1a; } .c-shoulder .card-day { color: #f56595; }
+  .c-long .card-icon { background: #1a2d0f; } .c-long .card-day { color: #8bc34a; }
+
+  .rest-card { opacity: 0.45; pointer-events: none; }
+
+  /* ===== TREINO PAGES ===== */
+  .header { padding: 20px 20px 24px; }
+  .back {
+    color: inherit; font-size: 0.85rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    -webkit-tap-highlight-color: transparent;
+    background: none; border: none; font-family: inherit;
+  }
+  .back:active { opacity: 0.6; }
+  .title-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .title-icon { font-size: 1.5rem; }
+  .title-row h2 { font-size: 1.4rem; color: #fff; font-weight: 700; }
+  .tag {
+    display: inline-block; margin-top: 8px;
+    font-size: 0.75rem; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .focus { margin-top: 8px; font-size: 0.85rem; color: #ccc; }
+  .exercises { padding: 16px; }
+  .exercise {
+    background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  }
+  .ex-top { display: flex; align-items: center; }
+  .ex-name { font-size: 0.95rem; font-weight: 600; color: #fff; flex: 1; }
+  .ex-sets {
+    font-size: 0.8rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 8px; white-space: nowrap;
+  }
+  .ex-detail { margin-top: 6px; font-size: 0.82rem; color: #999; line-height: 1.4; }
+  .ex-detail strong { color: #ddd; }
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    font-size: 0.7rem; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+  }
+
+  /* Theme: Push (orange) */
+  .t-push .header { background: linear-gradient(135deg, #2d1f0f, #1a1200); border-bottom: 1px solid #3d2f1f; }
+  .t-push .back { color: #f5a623; }
+  .t-push .tag { background: rgba(245,166,35,0.15); color: #f5a623; }
+  .t-push .ex-sets { background: rgba(245,166,35,0.12); color: #f5a623; }
+  .t-push .num { background: rgba(245,166,35,0.1); color: #f5a623; }
+
+  /* Theme: Leg (purple) */
+  .t-leg .header { background: linear-gradient(135deg, #1a0f2d, #100a1f); border-bottom: 1px solid #2a1f4d; }
+  .t-leg .back { color: #a78bfa; }
+  .t-leg .tag { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .t-leg .ex-sets { background: rgba(167,139,250,0.12); color: #a78bfa; }
+  .t-leg .num { background: rgba(167,139,250,0.1); color: #a78bfa; }
+
+  /* Theme: Pull (blue) */
+  .t-pull .header { background: linear-gradient(135deg, #0f1a2d, #0a1220); border-bottom: 1px solid #1f2a4d; }
+  .t-pull .back { color: #5b9bf5; }
+  .t-pull .tag { background: rgba(91,155,245,0.15); color: #5b9bf5; }
+  .t-pull .ex-sets { background: rgba(91,155,245,0.12); color: #5b9bf5; }
+  .t-pull .num { background: rgba(91,155,245,0.1); color: #5b9bf5; }
+
+  /* Theme: Shoulder (pink) */
+  .t-shoulder .header { background: linear-gradient(135deg, #2d0f1a, #1f0a12); border-bottom: 1px solid #4d1f2a; }
+  .t-shoulder .back { color: #f56595; }
+  .t-shoulder .tag { background: rgba(245,101,149,0.15); color: #f56595; }
+  .t-shoulder .ex-sets { background: rgba(245,101,149,0.12); color: #f56595; }
+  .t-shoulder .num { background: rgba(245,101,149,0.1); color: #f56595; }
+
+  /* Theme: Run (green) */
+  .t-run .header { background: linear-gradient(135deg, #0f2d1f, #0a1f15); border-bottom: 1px solid #1f4d2a; }
+  .t-run .back { color: #4cd964; }
+  .t-run .tag { background: rgba(76,217,100,0.15); color: #4cd964; }
+  .t-run .phase {
+    background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .t-run .phase-title {
+    font-size: 0.95rem; font-weight: 700; color: #fff;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .t-run .phase-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; background: rgba(76,217,100,0.1);
+  }
+  .t-run .phase-text { font-size: 0.85rem; color: #bbb; line-height: 1.6; }
+  .t-run .highlight {
+    background: rgba(76,217,100,0.08); border: 1px solid rgba(76,217,100,0.2);
+    border-radius: 10px; padding: 12px 14px; margin-top: 8px;
+  }
+  .t-run .hl-label { font-size: 0.75rem; color: #4cd964; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .t-run .hl-value { font-size: 1.1rem; color: #fff; font-weight: 700; margin-top: 2px; }
+  .t-run .hl-sub { font-size: 0.8rem; color: #888; margin-top: 2px; }
+
+  /* Theme: Long run (olive green) */
+  .t-long .header { background: linear-gradient(135deg, #1a2d0f, #121f0a); border-bottom: 1px solid #2a4d1f; }
+  .t-long .back { color: #8bc34a; }
+  .t-long .tag { background: rgba(139,195,74,0.15); color: #8bc34a; }
+  .t-long .info-card {
+    background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .t-long .info-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #8bc34a; margin-bottom: 6px; }
+  .t-long .info-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
+  .t-long .info-sub { font-size: 0.82rem; color: #888; margin-top: 4px; }
+  .t-long .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .t-long .stat {
+    background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 14px; text-align: center;
+  }
+  .t-long .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #8bc34a; }
+  .t-long .stat-value { font-size: 1.2rem; font-weight: 700; color: #fff; margin-top: 4px; }
+  .t-long .tip {
+    background: rgba(139,195,74,0.08); border: 1px solid rgba(139,195,74,0.2);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .t-long .tip-title { font-size: 0.85rem; font-weight: 700; color: #8bc34a; margin-bottom: 6px; }
+  .t-long .tip-text { font-size: 0.82rem; color: #bbb; line-height: 1.5; }
+
+  .content { padding: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== INDEX ==================== -->
+<div class="page active" id="pg-index">
+  <div class="index-wrap">
+    <h1>Meus Treinos</h1>
+    <p class="subtitle">Toque no treino do dia</p>
+    <div class="grid">
+      <div class="card c-push" onclick="go('pg-a')">
+        <div class="card-icon">💪</div>
+        <div class="card-text">
+          <div class="card-day">Segunda</div>
+          <div class="card-name">Treino A</div>
+          <div class="card-focus">Empurrar + Core</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card c-run" onclick="go('pg-run')">
+        <div class="card-icon">🏃</div>
+        <div class="card-text">
+          <div class="card-day">Terça</div>
+          <div class="card-name">Corrida</div>
+          <div class="card-focus">Velocidade (Tiros) + Core</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card c-leg" onclick="go('pg-b')">
+        <div class="card-icon">🦵</div>
+        <div class="card-text">
+          <div class="card-day">Quarta</div>
+          <div class="card-name">Treino B</div>
+          <div class="card-focus">Inferiores (Blindagem)</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card c-pull" onclick="go('pg-c')">
+        <div class="card-icon">🔗</div>
+        <div class="card-text">
+          <div class="card-day">Quinta</div>
+          <div class="card-name">Treino C</div>
+          <div class="card-focus">Puxar + Posterior</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card c-shoulder" onclick="go('pg-d')">
+        <div class="card-icon">🎯</div>
+        <div class="card-text">
+          <div class="card-day">Sexta</div>
+          <div class="card-name">Treino D</div>
+          <div class="card-focus">Ombros + Core Explosivo</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card rest-card">
+        <div class="card-icon" style="background:#1a1a1a;">😴</div>
+        <div class="card-text">
+          <div class="card-day" style="color:#666;">Sábado</div>
+          <div class="card-name">Repouso</div>
+          <div class="card-focus">Recuperação Total</div>
+        </div>
+      </div>
+      <div class="card c-long" onclick="go('pg-long')">
+        <div class="card-icon">🏔️</div>
+        <div class="card-text">
+          <div class="card-day">Domingo</div>
+          <div class="card-name">Longão</div>
+          <div class="card-focus">Resistência (Distância)</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TREINO A ==================== -->
+<div class="page t-push" id="pg-a">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">💪</span><h2>Treino A</h2></div>
+    <span class="tag">SEGUNDA</span>
+    <div class="focus">Foco: Estabilidade e força de empurre</div>
+  </div>
+  <div class="exercises">
+    <div class="exercise"><div class="ex-top"><span class="num">1</span><span class="ex-name">Supino Inc. Halteres</span><span class="ex-sets">3 x 8-10</span></div><div class="ex-detail">Controle a descida lenta.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">2</span><span class="ex-name">Supino Reto Máquina</span><span class="ex-sets">3 x 8-12</span></div><div class="ex-detail">Escápulas travadas no banco.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">3</span><span class="ex-name">Crucifixo Inc. Polia</span><span class="ex-sets">3 x 10-12</span></div><div class="ex-detail">Convergir na altura do queixo.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">4</span><span class="ex-name">Elevação Lateral</span><span class="ex-sets">4 x 12-15</span></div><div class="ex-detail">Cabo passando por trás do corpo.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">5</span><span class="ex-name">Tríceps Corda</span><span class="ex-sets">3 x Falha</span></div><div class="ex-detail"><strong>Cluster na última:</strong> 5/5/5 (15s rest).</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">6</span><span class="ex-name">Tríceps Testa</span><span class="ex-sets">3 x 10-12</span></div><div class="ex-detail">Cotovelos fechados para o teto.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">7</span><span class="ex-name">Prancha (Plank)</span><span class="ex-sets">3 x 1 min</span></div><div class="ex-detail">Contraia glúteos e abdômen.</div></div>
+  </div>
+</div>
+
+<!-- ==================== TREINO B ==================== -->
+<div class="page t-leg" id="pg-b">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">🦵</span><h2>Treino B</h2></div>
+    <span class="tag">QUARTA</span>
+    <div class="focus">Foco: Vasto Medial e proteção do joelho</div>
+  </div>
+  <div class="exercises">
+    <div class="exercise"><div class="ex-top"><span class="num">1</span><span class="ex-name">Flexão Tibial</span><span class="ex-sets">3 x 20</span></div><div class="ex-detail">Calcanhares no chão (Parede).</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">2</span><span class="ex-name">Panturrilha Sentado</span><span class="ex-sets">3 x 15</span></div><div class="ex-detail">Reduz carga de impacto no joelho.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">3</span><span class="ex-name">Agach. Búlgaro</span><span class="ex-sets">3 x 10</span></div><div class="ex-detail">Unilateral para estabilidade total.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">4</span><span class="ex-name">Cadeira Extensora</span><span class="ex-sets">3 x 12-15</span></div><div class="ex-detail"><strong>Pausa 2s</strong> com perna esticada.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">5</span><span class="ex-name">Leg Press 45°</span><span class="ex-sets">3 x 12</span></div><div class="ex-detail">Pés na base (baixo) da plataforma.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">6</span><span class="ex-name">Panturrilha em Pé</span><span class="ex-sets">4 x 12</span></div><div class="ex-detail"><strong>Pausa 2s</strong> no alongamento máximo.</div></div>
+  </div>
+</div>
+
+<!-- ==================== TREINO C ==================== -->
+<div class="page t-pull" id="pg-c">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">🔗</span><h2>Treino C</h2></div>
+    <span class="tag">QUINTA</span>
+    <div class="focus">Foco: Postura e propulsão na corrida</div>
+  </div>
+  <div class="exercises">
+    <div class="exercise"><div class="ex-top"><span class="num">1</span><span class="ex-name">Puxada Vertical</span><span class="ex-sets">3 x 10-12</span></div><div class="ex-detail">Cotovelos para baixo e para trás.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">2</span><span class="ex-name">Remada Unilateral</span><span class="ex-sets">3 x 10-12</span></div><div class="ex-detail">Esprema a escápula no final.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">3</span><span class="ex-name">Pulldown Polia</span><span class="ex-sets">3 x 12-15</span></div><div class="ex-detail">Braços esticados para postura.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">4</span><span class="ex-name">Stiff</span><span class="ex-sets">3 x 8-12</span></div><div class="ex-detail">Barra raspando na perna (alongar).</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">5</span><span class="ex-name">Cadeira Flexora</span><span class="ex-sets">3 x Falha</span></div><div class="ex-detail"><strong>Cluster na última:</strong> 5/5/5 (15s rest).</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">6</span><span class="ex-name">Rosca Scott</span><span class="ex-sets">3 x 10</span></div><div class="ex-detail">Controle total na descida do peso.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">7</span><span class="ex-name">Flexão de Punho</span><span class="ex-sets">3 x Falha</span></div><div class="ex-detail">Polia baixa até queimar tudo.</div></div>
+  </div>
+</div>
+
+<!-- ==================== TREINO D ==================== -->
+<div class="page t-shoulder" id="pg-d">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">🎯</span><h2>Treino D</h2></div>
+    <span class="tag">SEXTA</span>
+    <div class="focus">Foco: Ombreira e estabilidade lombar/quadril</div>
+  </div>
+  <div class="exercises">
+    <div class="exercise"><div class="ex-top"><span class="num">1</span><span class="ex-name">Desenv. Halteres</span><span class="ex-sets">3 x 8-10</span></div><div class="ex-detail">Sentado, foco no ombro anterior.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">2</span><span class="ex-name">Elevação Frontal</span><span class="ex-sets">3 x 10-12</span></div><div class="ex-detail">Halteres com pegada neutra.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">3</span><span class="ex-name">Crucifixo Inverso</span><span class="ex-sets">3 x 12-15</span></div><div class="ex-detail">Foco em ombro posterior.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">4</span><span class="ex-name">Abdominal Supra</span><span class="ex-sets">3 x 15-20</span></div><div class="ex-detail">Solo ou máquina.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">5</span><span class="ex-name">Abdominal Infra</span><span class="ex-sets">3 x 12-15</span></div><div class="ex-detail">Elevação de pernas.</div></div>
+    <div class="exercise"><div class="ex-top"><span class="num">6</span><span class="ex-name">Perdigueiro</span><span class="ex-sets">3 x 1 min</span></div><div class="ex-detail">Trocando lados (estabilidade lombar).</div></div>
+  </div>
+</div>
+
+<!-- ==================== CORRIDA TIROS ==================== -->
+<div class="page t-run" id="pg-run">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">🏃</span><h2>Corrida — Tiros</h2></div>
+    <span class="tag">TERÇA</span>
+    <div class="focus">Foco: Aumentar o Pace</div>
+  </div>
+  <div class="content">
+    <div class="phase">
+      <div class="phase-title"><span class="phase-icon">🔥</span> Aquecimento</div>
+      <div class="phase-text">10 min caminhada rápida / trote leve + Ativação "Escudo" (Tibial / Panturrilha).</div>
+    </div>
+    <div class="phase">
+      <div class="phase-title"><span class="phase-icon">⚡</span> Principal</div>
+      <div class="highlight">
+        <div class="hl-label">Protocolo</div>
+        <div class="hl-value">6x 400 metros</div>
+        <div class="hl-sub">Ritmo alvo: entre 6'30" e 6'45"</div>
+      </div>
+      <div class="highlight" style="margin-top:8px;">
+        <div class="hl-label">Recuperação entre tiros</div>
+        <div class="hl-value">1 min 30s</div>
+        <div class="hl-sub">Caminhada lenta</div>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-title"><span class="phase-icon">🧊</span> Desaquecimento</div>
+      <div class="phase-text">5 a 10 min de caminhada lenta.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LONGÃO ==================== -->
+<div class="page t-long" id="pg-long">
+  <div class="header">
+    <button class="back" onclick="go('pg-index')">‹ Voltar</button>
+    <div class="title-row"><span class="title-icon">🏔️</span><h2>Longão</h2></div>
+    <span class="tag">DOMINGO</span>
+    <div class="focus">Foco: Aumentar a Distância</div>
+  </div>
+  <div class="content">
+    <div class="info-card">
+      <div class="info-title">Meta</div>
+      <div class="info-value">7 km</div>
+      <div class="info-sub">Ritmo constante e controlado</div>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Ritmo alvo</div>
+        <div class="stat-value">7'40"–8'10"</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Aquecimento</div>
+        <div class="stat-value">Ativação</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-title">Aquecimento</div>
+      <div class="info-sub">Ativação total de panturrilha, tibial e tornozelo.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-title">Estratégia</div>
+      <div class="tip-text">Se a panturrilha pesar, caminhe 1 min a cada 15 min de corrida.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function go(id) {
+  document.querySelector('.page.active').classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
